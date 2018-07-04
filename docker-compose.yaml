@@ -1,0 +1,29 @@
+version: '3'
+services:
+  pg_prometheus:
+    container_name: pg_prometheus
+    image: timescale/pg_prometheus:master
+    ports:
+    - 5432:5432
+
+  prometheus-adaptor:
+    container_name: prometheus-adaptor
+    image: timescale/prometheus-postgresql-adapter:master  #registry.cn-hangzhou.aliyuncs.com/mojo/prometheus_pg_adaptor
+    depends_on:
+    - pg_prometheus
+    ports:
+    - 9201:9201
+    entrypoint:
+    - ./prometheus-postgresql-adapter
+    - -pg.host=pg_prometheus
+    - pg.prometheus-log-samples
+
+  prometheus:
+    container_name: prometheus
+    image: registry.cn-hangzhou.aliyuncs.com/mojo/prometheus
+    depends_on:
+    - prometheus-adaptor
+    volumes:
+    - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+    - 9090:9090
